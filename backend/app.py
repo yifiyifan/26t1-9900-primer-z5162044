@@ -18,10 +18,7 @@ def get_students():
     return: Array of student objects
     """
     # TODO: replace with your implementation. This is a mock response
-    return jsonify([
-        {'course': 'COMP1531', 'id': 1, 'mark': 85, 'name': 'Alice Zhang'},
-        {'course': 'COMP1531', 'id': 2, 'mark': 72, 'name': 'Bob Smith'}
-    ]), 200
+    return jsonify(db.get_all_students()), 200
 
 
 @app.route("/students", methods=["POST"])
@@ -37,7 +34,11 @@ def create_student():
     # Getting the request body - replace with your implementation
     student_data = request.json
 
-    pass
+    name = student_data.get("name", "").strip()
+    course = student_data.get("course", "").strip()
+    mark = student_data.get("mark", 0)
+
+    return jsonify(db.insert_student(name, course, mark)), 200
 
 
 @app.route("/students/<int:student_id>", methods=["PUT"])
@@ -49,7 +50,23 @@ def update_student(student_id):
     param mark: The mark the student received (from request body)
     return: The updated student if successful
     """
-    pass  # replace with your implementation
+
+    all_students = db.get_all_students()
+    if not any(s["id"] == student_id for s in all_students):
+        return jsonify({"error": "Student not found"}), 404
+
+    name = request.json.get("name", "").strip()
+    course = request.json.get("course", "").strip()
+    mark = request.json.get("mark", "") # i.e mark is not provided
+
+    return jsonify(
+        db.update_student(
+            student_id, 
+            name, 
+            course, 
+            mark
+        )
+    ), 200
 
 
 @app.route("/students/<int:student_id>", methods=["DELETE"])
@@ -58,7 +75,13 @@ def delete_student(student_id):
     Route to delete student by id
     return: The deleted student
     """
-    pass  # replace with your implementation
+
+    all_students = db.get_all_students()
+    if not any(s["id"] == student_id for s in all_students):
+        return jsonify({"error": "Student not found"}), 404
+
+    return jsonify(db.delete_student(student_id)), 200
+
 
 
 @app.route("/stats")
@@ -67,7 +90,17 @@ def get_stats():
     Route to show the stats of all student marks 
     return: An object with the stats (count, average, min, max)
     """
-    pass  # replace with your implementation
+    data = db.get_all_students()
+    if not data:
+        return jsonify({"count": 0, "average": 0, "min": 0, "max": 0}), 200
+
+    marks = [student["mark"] for student in data]
+    return jsonify({
+        "count": len(marks),
+        "average": sum(marks) / len(marks),
+        "min": min(marks),
+        "max": max(marks)
+    }), 200
 
 
 @app.route("/")

@@ -57,6 +57,7 @@ export default function EditStudentModal({ student, onSave, onClose }) {
               max="100"
               value={mark}
               onChange={(e) => setMark(e.target.value)}
+              required
             />
           </div>
           <div className={S.modalActions}>
